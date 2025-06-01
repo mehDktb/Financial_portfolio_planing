@@ -1,29 +1,30 @@
+% regression.mzn
 
-% Parameters
-int: n_samples;  % Number of data points
-int: n_features; % Number of features (including intercept)
-array[1..n_samples, 1..n_features] of float: X; % Feature matrix
-array[1..n_samples] of float: y; % Target values
+int: n_samples;
+int: n_features;
+array[1..n_samples, 1..n_features] of float: X;
+array[1..n_samples] of float: y;
 
-% Coefficients to solve for
 array[1..n_features] of var float: beta;
 
-% Normal equations: (X'X)β = X'y
 constraint
-    forall(j in 1..n_features) (
-        sum([sum([X[k,i] * X[k,j] | k in 1..n_samples]) * beta[i] 
-            | i in 1..n_features]) = 
-        sum([X[k,j] * y[k] | k in 1..n_samples])
-    );
+  forall(j in 1..n_features) (
+    let {
+      var float: lhs = sum(i in 1..n_features)(
+        sum(k in 1..n_samples)(X[k,i] * X[k,j]) * beta[i]
+      );
+      float: rhs = sum(k in 1..n_samples)(X[k,j] * y[k])
+    } in
+    lhs = rhs
+  );
 
 solve satisfy;
 
-% Prediction using last available data point
-float: prediction = sum(j in 1..n_features)(X[n_samples,j] * beta[j]);
+var float: prediction = sum(j in 1..n_features)(X[n_samples,j] * beta[j]);
 
 output [
-    "Regression coefficients:\n",
-    show(beta) ++ "\n\n",
-    "Next week's predicted high: ", 
-    show_float(5, 2, prediction)
+  "Regression coefficients:\n",
+  show(beta) ++ "\n\n",
+  "Prediction for last row: ", 
+  show(prediction)
 ];

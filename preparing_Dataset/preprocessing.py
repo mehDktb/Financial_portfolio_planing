@@ -1,6 +1,9 @@
+import joblib
 import argparse
 import pandas as pd
 import os
+import numpy as np
+from sklearn.preprocessing import StandardScaler
 
 def load_data(path: str) -> pd.DataFrame:
     """
@@ -36,45 +39,65 @@ def engineer_target(df_feat: pd.DataFrame, horizon: int) -> pd.DataFrame:
 
 
 
-def prepare_minizinc_data(df_train: pd.DataFrame, target_col: str) -> str:
+def to_minizinc_2d(data: list) -> str:
+    """Convert Python list of lists to MiniZinc 2D array literal"""
+    rows = []
+    for row in data:
+        formatted_row = ", ".join([f"{x:.4f}" for x in row])
+        rows.append(f"| {formatted_row}")
+    return f"[{' '.join(rows)} |]"
+
+
+
+
+def prepare_minizinc_data(df_train: pd.DataFrame, target_col: str, scale_features=True, scale_target=True) -> str:
     """
-    Prepare data for MiniZinc with intercept column and save it in the specified data folder.
-    
-    Parameters:
-        df_train (pd.DataFrame): DataFrame containing features and target.
-        target_col (str): The name of the target column.
+    Prepare data for MiniZinc regression with intercept and optional scaling.
+
+    Args:
+        df_train: DataFrame with features and target.
+        target_col: Name of the target column.
+        scale_features: Whether to scale features (recommended for large values).
+        scale_target: Whether to scale the target (recommended for large values).
 
     Returns:
-        str: The full path to the generated .dzn file.
+        Path to the generated .dzn file.
     """
-    # Add intercept column
-    features_df = df_train.drop(columns=[target_col]).copy()
+    # Separate features and target
+    features_df = df_train.drop(columns=[target_col])
+    target = df_train[target_col]
+
+    # Scale features if requested
+    if scale_features:
+        scaler = StandardScaler()
+        features_scaled = scaler.fit_transform(features_df)
+        features_df = pd.DataFrame(features_scaled, columns=features_df.columns, index=features_df.index)
+        joblib.dump(scaler, 'data/target_scaler.pkl')
+
+    # Scale target if requested
+    if scale_target:
+        target_scaler = StandardScaler()
+        target_scaled = target_scaler.fit_transform(target.values.reshape(-1, 1)).flatten()
+        target = pd.Series(target_scaled, index=target.index)
+        joblib.dump(target_scaler, 'data/target_scaler.pkl')
+
+    # Add intercept column (after scaling)
     features_df['intercept'] = 1.0
 
     # Convert to MiniZinc format
     features = features_df.values.tolist()
-    target = df_train[target_col].values.tolist()
+    target_list = target.values.tolist()
 
     dzn_content = f"""
     n_samples = {len(features)};
     n_features = {len(features[0])};
-    X = {features};
-    y = {target};
+    X = {to_minizinc_2d(features)};
+    y = {target_list};
     """
+    with open("data/data.dzn", "w") as f:
+        f.write(dzn_content)
 
-    # Define target path
-    file_dir = "/home/mehdi_ktb/Documents/Uni/OR/project/Financial_portfolio_planing/data"
-    file_path = os.path.join(file_dir, "data.dzn")
-
-    # Ensure directory exists
-    os.makedirs(file_dir, exist_ok=True)
-
-    # Write to file
-    with open(file_path, "w") as f:
-        f.write(dzn_content.strip())  # strip() removes leading/trailing whitespace
-
-    return file_path
-
+    return "data.dzn"
 
 
 
