@@ -29,3 +29,7 @@ game28.dta
 
 # Log files
 warnings.log
+
+*.csv
+*.dzn
+*.pkl

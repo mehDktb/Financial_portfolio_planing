@@ -34,12 +34,18 @@ except subprocess.CalledProcessError as e:
 # print(coefficients)
 
 import re
+# Extract prediction
 match = re.search(r"Prediction for last row: ([\d\.\-e]+)", result.stdout)
 if match:
     scaled_pred = float(match.group(1))
-    original_pred = scaler.inverse_transform([[scaled_pred]])[0][0]
-    print(f"\nUnscaled Prediction for last row: {original_pred}")
+    print(f"Scaled prediction: {scaled_pred}")
+    
+    # Load correct scaler
+    target_scaler = joblib.load('data/target_scaler.pkl')
+    
+    # Inverse transform
+    original_pred = target_scaler.inverse_transform([[scaled_pred]])[0][0]
+    print(f"Unscaled Prediction for last row: {original_pred}")
 else:
     print("Could not find prediction in MiniZinc output.")
-
 

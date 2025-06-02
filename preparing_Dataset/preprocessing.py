@@ -28,13 +28,14 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
         df_feat[f'{col}_lag1'] = df_feat[col].shift(1)
     return df_feat.dropna()
 
-def engineer_target(df_feat: pd.DataFrame, horizon: int) -> pd.DataFrame:
+def engineer_target(df_feat: pd.DataFrame, horizon: int, pred) -> pd.DataFrame:
     """
     Align features with future 'High' values.
     """
-    target_col = f'High_target_{horizon}d'
+    target_col = f'{pred}_target_{horizon}d'
     df_train = df_feat.copy()
-    df_train[target_col] = df_train['High'].shift(-horizon)
+    df_train[target_col] = df_train[pred].shift(-horizon)
+    print(df_train.head(15))
     return df_train.dropna()
 
 
@@ -72,7 +73,7 @@ def prepare_minizinc_data(df_train: pd.DataFrame, target_col: str, scale_feature
         scaler = StandardScaler()
         features_scaled = scaler.fit_transform(features_df)
         features_df = pd.DataFrame(features_scaled, columns=features_df.columns, index=features_df.index)
-        joblib.dump(scaler, 'data/target_scaler.pkl')
+        joblib.dump(scaler, 'data/feature_scaler.pkl')
 
     # Scale target if requested
     if scale_target:
@@ -117,15 +118,16 @@ def main():
     parser = argparse.ArgumentParser(description="Forecast Bitcoin high price in N days")
     parser.add_argument("--data", type=str, required=True, help="Path to CSV file")
     parser.add_argument("--horizon", type=int, default=7, help="Days ahead to predict")
+    parser.add_argument("--pred" , type =str, required=True, help="High for highest price during the next week and Low for lowest price for next week")
     args = parser.parse_args()
 
     # Load and process
     df = load_data(args.data)
     df_feat = engineer_features(df)
-    df_train = engineer_target(df_feat, args.horizon)
+    df_train = engineer_target(df_feat, args.horizon, args.pred)
     
     # Get target column name dynamically
-    target_col = f'High_target_{args.horizon}d'
+    target_col = f'{args.pred}_target_{args.horizon}d'
     
     # Prepare MiniZinc data
     prepare_minizinc_data(df_train, target_col)
