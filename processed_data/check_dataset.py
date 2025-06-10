@@ -45,7 +45,7 @@ def check_dzn_data(filepath):
 
 # Main
 if __name__ == '__main__':
-    filepath = "/home/mehdi_ktb/Documents/Uni/OR/project/Financial_portfolio_planing/data/data.dzn"
+    filepath = "/processed_data/data.dzn"
     if not filepath:
         filepath = 'data.dzn'
     if not os.path.exists(filepath):

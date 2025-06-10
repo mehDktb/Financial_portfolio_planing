@@ -53,7 +53,7 @@ def to_minizinc_2d(data: list) -> str:
 
 def prepare_minizinc_data(df_train: pd.DataFrame, target_col: str, scale_features=True, scale_target=True) -> str:
     """
-    Prepare data for MiniZinc regression with intercept and optional scaling.
+    Prepare processed_data for MiniZinc regression with intercept and optional scaling.
 
     Args:
         df_train: DataFrame with features and target.
@@ -73,14 +73,14 @@ def prepare_minizinc_data(df_train: pd.DataFrame, target_col: str, scale_feature
         scaler = StandardScaler()
         features_scaled = scaler.fit_transform(features_df)
         features_df = pd.DataFrame(features_scaled, columns=features_df.columns, index=features_df.index)
-        joblib.dump(scaler, 'data/feature_scaler.pkl')
+        joblib.dump(scaler, 'scalers/feature_scaler.pkl')
 
     # Scale target if requested
     if scale_target:
         target_scaler = StandardScaler()
         target_scaled = target_scaler.fit_transform(target.values.reshape(-1, 1)).flatten()
         target = pd.Series(target_scaled, index=target.index)
-        joblib.dump(target_scaler, 'data/target_scaler.pkl')
+        joblib.dump(target_scaler, 'scalers/target_scaler.pkl')
 
     # Add intercept column (after scaling)
     features_df['intercept'] = 1.0
@@ -95,21 +95,22 @@ def prepare_minizinc_data(df_train: pd.DataFrame, target_col: str, scale_feature
     X = {to_minizinc_2d(features)};
     y = {target_list};
     """
-    with open("data/data.dzn", "w") as f:
+    with open("processed_data/processed_data.dzn", "w") as f:
         f.write(dzn_content)
 
-    return "data.dzn"
+    return "processed_data.dzn"
 
 
 
-# def preprocess(data_path, horizon):
+# def preprocess(data_path, horizon, pred):
 #     # Load and process the entire dataset
 #     df = load_data(data_path)
 #     df_feat = engineer_features(df)
-#     df_train = engineer_target(df_feat, horizon)
+#     df_train = engineer_target(df_feat, horizon, pred)
 #     # print(df_train.head(15))
-#     Y = df_train.iloc[:, -1]
-#     prepare_minizinc_data(df_train, Y)
+#     target_col = f'{pred}_target_{horizon}d'
+#     prepare_minizinc_data(df_train, target_col)
+
 
 
 
@@ -125,11 +126,11 @@ def main():
     df = load_data(args.data)
     df_feat = engineer_features(df)
     df_train = engineer_target(df_feat, args.horizon, args.pred)
-    
+
     # Get target column name dynamically
     target_col = f'{args.pred}_target_{args.horizon}d'
-    
-    # Prepare MiniZinc data
+
+    # Prepare MiniZinc processed_data
     prepare_minizinc_data(df_train, target_col)
 
 if __name__ == '__main__':

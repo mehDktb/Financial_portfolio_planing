@@ -3,9 +3,12 @@ import joblib
 import numpy as np 
 
 # Your filenames
+csv_data = "./raw_data"
 mzn_file = "/home/mehdi_ktb/Documents/Uni/OR/project/Financial_portfolio_planing/MiniZinc/linear_regression.mzn"
-dzn_file = "/home/mehdi_ktb/Documents/Uni/OR/project/Financial_portfolio_planing/data/data.dzn"
+dzn_file = "/processed_data/data.dzn"
 
+
+datasets = ["Gold", "Bitcoin", "Ethereum"]
 # Specify your solver, e.g., "gecode", "cbc", "coin-bc", "chuffed"
 solver_name = "coin-bc"
 
@@ -39,10 +42,10 @@ match = re.search(r"Prediction for last row: ([\d\.\-e]+)", result.stdout)
 if match:
     scaled_pred = float(match.group(1))
     print(f"Scaled prediction: {scaled_pred}")
-    
+
     # Load correct scaler
-    target_scaler = joblib.load('data/target_scaler.pkl')
-    
+    target_scaler = joblib.load('processed_data/target_scaler.pkl')
+
     # Inverse transform
     original_pred = target_scaler.inverse_transform([[scaled_pred]])[0][0]
     print(f"Unscaled Prediction for last row: {original_pred}")
