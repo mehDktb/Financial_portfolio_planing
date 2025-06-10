@@ -26,7 +26,7 @@ for market in datasets:
         for horizon in range(1, 8):
             for pred in ["High", "Low"]:
 
-                preprocess(data_path=csv_data+'/'+market, horizon=horizon, pred="High")
+                preprocess(data_path=csv_data+'/'+market, horizon=horizon, pred=pred)
 
 
                 scaler = joblib.load("./scalers/target_scaler.pkl")
