@@ -57,6 +57,15 @@ for market in datasets:
                     else :
                         raise ValueError (f"unsuported input {market} {horizon} {pred}")
 
+                # todo implementing minizinc code
+
+                # todo pass data to new minizinc code
+
+                # todo update the capital
+
+                # todo update the dataset
+
+                # todo run this fucking code till End
 
 
 
