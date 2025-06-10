@@ -5,7 +5,7 @@ import numpy as np
 
 # Your filenames
 csv_data = "./raw_data"
-mzn_file = "/home/mehdi_ktb/Documents/Uni/OR/project/Financial_portfolio_planing/MiniZinc/linear_regression.mzn"
+mzn_file = "./MiniZinc/linear_regression.mzn"
 dzn_file = "./processed_data/processed_data.dzn"
 
 
@@ -16,7 +16,7 @@ solver_name = "coin-bc"
 preprocess(data_path=csv_data+'/'+datasets[1], horizon=7, pred="High")
 
 
-scaler = joblib.load("/home/mehdi_ktb/Documents/Uni/OR/project/Financial_portfolio_planing/scalers/target_scaler.pkl")
+scaler = joblib.load("./scalers/target_scaler.pkl")
 
 
 try:
