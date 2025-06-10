@@ -1,18 +1,22 @@
 import subprocess
 import joblib
+from preparing_Dataset.preprocessing import preprocess
 import numpy as np 
 
 # Your filenames
 csv_data = "./raw_data"
 mzn_file = "/home/mehdi_ktb/Documents/Uni/OR/project/Financial_portfolio_planing/MiniZinc/linear_regression.mzn"
-dzn_file = "/processed_data/data.dzn"
+dzn_file = "./processed_data/processed_data.dzn"
 
 
-datasets = ["Gold", "Bitcoin", "Ethereum"]
+datasets = ["Gold.csv", "Bitcoin.csv", "Ethereum.csv"]
 # Specify your solver, e.g., "gecode", "cbc", "coin-bc", "chuffed"
 solver_name = "coin-bc"
 
-scaler = joblib.load("/home/mehdi_ktb/Documents/Uni/OR/project/Financial_portfolio_planing/preparing_Dataset/target_scaler.pkl")
+preprocess(data_path=csv_data+'/'+datasets[1], horizon=7, pred="High")
+
+
+scaler = joblib.load("/home/mehdi_ktb/Documents/Uni/OR/project/Financial_portfolio_planing/scalers/target_scaler.pkl")
 
 
 try:
@@ -44,7 +48,7 @@ if match:
     print(f"Scaled prediction: {scaled_pred}")
 
     # Load correct scaler
-    target_scaler = joblib.load('processed_data/target_scaler.pkl')
+    target_scaler = joblib.load('scalers/target_scaler.pkl')
 
     # Inverse transform
     original_pred = target_scaler.inverse_transform([[scaled_pred]])[0][0]

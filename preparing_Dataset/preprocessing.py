@@ -102,37 +102,37 @@ def prepare_minizinc_data(df_train: pd.DataFrame, target_col: str, scale_feature
 
 
 
-# def preprocess(data_path, horizon, pred):
-#     # Load and process the entire dataset
-#     df = load_data(data_path)
-#     df_feat = engineer_features(df)
-#     df_train = engineer_target(df_feat, horizon, pred)
-#     # print(df_train.head(15))
-#     target_col = f'{pred}_target_{horizon}d'
-#     prepare_minizinc_data(df_train, target_col)
-
-
-
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Forecast Bitcoin high price in N days")
-    parser.add_argument("--data", type=str, required=True, help="Path to CSV file")
-    parser.add_argument("--horizon", type=int, default=7, help="Days ahead to predict")
-    parser.add_argument("--pred" , type =str, required=True, help="High for highest price during the next week and Low for lowest price for next week")
-    args = parser.parse_args()
-
-    # Load and process
-    df = load_data(args.data)
+def preprocess(data_path, horizon, pred):
+    # Load and process the entire dataset
+    df = load_data(data_path)
     df_feat = engineer_features(df)
-    df_train = engineer_target(df_feat, args.horizon, args.pred)
-
-    # Get target column name dynamically
-    target_col = f'{args.pred}_target_{args.horizon}d'
-
-    # Prepare MiniZinc processed_data
+    df_train = engineer_target(df_feat, horizon, pred)
+    # print(df_train.head(15))
+    target_col = f'{pred}_target_{horizon}d'
     prepare_minizinc_data(df_train, target_col)
 
-if __name__ == '__main__':
-    main()
+
+
+
+
+# def main():
+#     parser = argparse.ArgumentParser(description="Forecast Bitcoin high price in N days")
+#     parser.add_argument("--data", type=str, required=True, help="Path to CSV file")
+#     parser.add_argument("--horizon", type=int, default=7, help="Days ahead to predict")
+#     parser.add_argument("--pred" , type =str, required=True, help="High for highest price during the next week and Low for lowest price for next week")
+#     args = parser.parse_args()
+#
+#     # Load and process
+#     df = load_data(args.data)
+#     df_feat = engineer_features(df)
+#     df_train = engineer_target(df_feat, args.horizon, args.pred)
+#
+#     # Get target column name dynamically
+#     target_col = f'{args.pred}_target_{args.horizon}d'
+#
+#     # Prepare MiniZinc processed_data
+#     prepare_minizinc_data(df_train, target_col)
+#
+# if __name__ == '__main__':
+#     main()
 
