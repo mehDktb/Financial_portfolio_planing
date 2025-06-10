@@ -35,7 +35,7 @@ def engineer_target(df_feat: pd.DataFrame, horizon: int, pred) -> pd.DataFrame:
     target_col = f'{pred}_target_{horizon}d'
     df_train = df_feat.copy()
     df_train[target_col] = df_train[pred].shift(-horizon)
-    print(df_train.head(15))
+    # print(df_train.head(15))
     return df_train.dropna()
 
 
