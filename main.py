@@ -1,7 +1,8 @@
-import subprocess
 import joblib
+
+from compute_regression import comoute_regression
 from preparing_Dataset.preprocessing import preprocess
-import numpy as np 
+import numpy as np
 
 # Your filenames
 csv_data = "./raw_data"
@@ -27,35 +28,9 @@ for market in datasets:
             for pred in ["High", "Low"]:
 
                 preprocess(data_path=csv_data+'/'+market, horizon=horizon, pred=pred)
-
-
                 scaler = joblib.load("./scalers/target_scaler.pkl")
 
-
-                try:
-                    result = subprocess.run(
-                        ["minizinc", "--solver", solver_name, mzn_file, dzn_file],
-                        text=True,
-                        capture_output=True,
-                        check=True
-                    )
-
-                    # Output result
-                    print("MiniZinc Output:\n")
-                    print(result.stdout)
-
-                except subprocess.CalledProcessError as e:
-                    print("An error occurred while running MiniZinc:")
-                    print(e.stderr)
-
-
-
-                # coefficients = result.stdout[1:-13].split(", ")
-                # print(coefficients)
-
-                import re
-                # Extract prediction
-                match = re.search(r"Prediction for last row: ([\d\.\-e]+)", result.stdout)
+                match = comoute_regression(solver_name, mzn_file, dzn_file)
                 if match:
                     scaled_pred = float(match.group(1))
                     print(f"Scaled prediction: {scaled_pred}")
@@ -81,6 +56,10 @@ for market in datasets:
                         ethereum_low.append(original_pred)
                     else :
                         raise ValueError (f"unsuported input {market} {horizon} {pred}")
+
+
+
+
                 else:
                     print("Could not find prediction in MiniZinc output.")
 
