@@ -1,0 +1,1 @@
+def prepare_data_for_minizinc_model(GOLD)

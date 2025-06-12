@@ -5,6 +5,7 @@ import os
 import numpy as np
 from sklearn.preprocessing import StandardScaler
 
+
 def load_data(path: str) -> pd.DataFrame:
     """
     Load CSV, parse 'Price' column as datetime, and set as index.
@@ -13,31 +14,44 @@ def load_data(path: str) -> pd.DataFrame:
     df.set_index('Price', inplace=True)
     return df
 
-# def filter_interval(df: pd.DataFrame, start: str, end: str) -> pd.DataFrame: #! it can be used to create a time frame 
-#     """
-#     Filter DataFrame between start and end dates (inclusive).
-#     """
-#     return df.loc[start:end]
 
-def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Add lag-1 features for OHLCV.
-    """
+def engineer_features(df: pd.DataFrame, lags=[1, 2, 5], include_ma=True, ma_windows=[5, 10]) -> pd.DataFrame:
     df_feat = df.copy()
     for col in ['Open', 'High', 'Low', 'Close', 'Volume']:
-        df_feat[f'{col}_lag1'] = df_feat[col].shift(1)
+        for lag in lags:
+            df_feat[f'{col}_lag{lag}'] = df_feat[col].shift(lag)
+        if include_ma:
+            for window in ma_windows:
+                df_feat[f'{col}_ma{window}'] = df_feat[col].rolling(window=window).mean()
     return df_feat.dropna()
 
-def engineer_target(df_feat: pd.DataFrame, horizon: int, pred) -> pd.DataFrame:
+
+def prepare_training_data(df_feat: pd.DataFrame, horizon: int, pred: str) -> tuple:
     """
-    Align features with future 'High' values.
+    Prepare training data by creating target values from historical data.
+    For each row, the target is the value 'horizon' days in the future.
+
+    Returns:
+        - df_train: DataFrame with features and targets for training
+        - df_predict: DataFrame with features for the final prediction (no target)
     """
     target_col = f'{pred}_target_{horizon}d'
     df_train = df_feat.copy()
-    df_train[target_col] = df_train[pred].shift(-horizon)
-    # print(df_train.head(15))
-    return df_train.dropna()
 
+    # Create target by shifting the prediction column backward by horizon days
+    # This means: for day i, target = value at day (i + horizon)
+    df_train[target_col] = df_train[pred].shift(-horizon)
+
+    # Split into training data (has targets) and prediction data (no targets)
+    # Training data: all rows except the last 'horizon' rows (they don't have future targets)
+    df_train_with_targets = df_train[:-horizon].copy()
+
+    # Prediction data: the last row(s) that we'll use to predict future values
+    # We only need the last row since we're predicting one step ahead
+    df_predict = df_train.iloc[[-1]].copy()  # Last row for prediction
+    df_predict = df_predict.drop(columns=[target_col])  # Remove target column
+
+    return df_train_with_targets.dropna(), df_predict
 
 
 def to_minizinc_2d(data: list) -> str:
@@ -49,30 +63,47 @@ def to_minizinc_2d(data: list) -> str:
     return f"[{' '.join(rows)} |]"
 
 
-
-
-def prepare_minizinc_data(df_train: pd.DataFrame, target_col: str, scale_features=True, scale_target=True) -> str:
+def prepare_minizinc_data(df_train: pd.DataFrame, df_predict: pd.DataFrame,
+                          target_col: str, scale_features=True, scale_target=True) -> str:
     """
-    Prepare processed_data for MiniZinc regression with intercept and optional scaling.
+    Prepare data for MiniZinc regression with intercept and optional scaling.
 
     Args:
-        df_train: DataFrame with features and target.
+        df_train: DataFrame with features and target for training.
+        df_predict: DataFrame with features for prediction (no target).
         target_col: Name of the target column.
-        scale_features: Whether to scale features (recommended for large values).
-        scale_target: Whether to scale the target (recommended for large values).
+        scale_features: Whether to scale features.
+        scale_target: Whether to scale the target.
 
     Returns:
         Path to the generated .dzn file.
     """
-    # Separate features and target
-    features_df = df_train.drop(columns=[target_col])
+    # Ensure scalers directory exists
+    os.makedirs('scalers', exist_ok=True)
+    os.makedirs('processed_data', exist_ok=True)
+
+    # Separate features and target from training data
+    train_features_df = df_train.drop(columns=[target_col])
     target = df_train[target_col]
+
+    # Get prediction features
+    predict_features_df = df_predict.copy()
 
     # Scale features if requested
     if scale_features:
         scaler = StandardScaler()
-        features_scaled = scaler.fit_transform(features_df)
-        features_df = pd.DataFrame(features_scaled, columns=features_df.columns, index=features_df.index)
+        # Fit on training features
+        train_features_scaled = scaler.fit_transform(train_features_df)
+        train_features_df = pd.DataFrame(train_features_scaled,
+                                         columns=train_features_df.columns,
+                                         index=train_features_df.index)
+
+        # Transform prediction features using the same scaler
+        predict_features_scaled = scaler.transform(predict_features_df)
+        predict_features_df = pd.DataFrame(predict_features_scaled,
+                                           columns=predict_features_df.columns,
+                                           index=predict_features_df.index)
+
         joblib.dump(scaler, 'scalers/feature_scaler.pkl')
 
     # Scale target if requested
@@ -83,56 +114,83 @@ def prepare_minizinc_data(df_train: pd.DataFrame, target_col: str, scale_feature
         joblib.dump(target_scaler, 'scalers/target_scaler.pkl')
 
     # Add intercept column (after scaling)
-    features_df['intercept'] = 1.0
+    train_features_df['intercept'] = 1.0
+    predict_features_df['intercept'] = 1.0
 
     # Convert to MiniZinc format
-    features = features_df.values.tolist()
+    train_features = train_features_df.values.tolist()
+    predict_features = predict_features_df.values.tolist()
     target_list = target.values.tolist()
 
     dzn_content = f"""
-    n_samples = {len(features)};
-    n_features = {len(features[0])};
-    X = {to_minizinc_2d(features)};
-    y = {target_list};
-    """
+n_samples = {len(train_features)};
+n_features = {len(train_features[0])};
+X = {to_minizinc_2d(train_features)};
+y = {target_list};
+X_predict = {to_minizinc_2d(predict_features)};
+"""
+
     with open("processed_data/processed_data.dzn", "w") as f:
         f.write(dzn_content)
 
-    return "processed_data.dzn"
-
+    return "processed_data/processed_data.dzn"
 
 
 def preprocess(data_path, horizon, pred):
+    """
+    Main preprocessing function for forecasting.
+
+    This function prepares data to predict the value 'horizon' days into the future.
+    For example, if you have data for days 1-100 and horizon=1,
+    it will prepare data to predict the value for day 101.
+    """
     # Load and process the entire dataset
     df = load_data(data_path)
+    print(f"Loaded data: {len(df)} samples")
+    print(f"Date range: {df.index[0]} to {df.index[-1]}")
+
+    # Engineer features (adds lag-1 features)
     df_feat = engineer_features(df)
-    df_train = engineer_target(df_feat, horizon, pred)
-    # print(df_train.head(15))
+    print(f"Features engineered: {len(df_feat)} samples after adding lags")
+
+    # Prepare training and prediction data
+    df_train, df_predict = prepare_training_data(df_feat, horizon, pred)
+
+    print(f"Training samples: {len(df_train)}")
+    print(f"Prediction features prepared for forecasting {horizon} days ahead")
+    print(f"Last training date: {df_train.index[-1]}")
+    print(f"Predicting for approximately: {df_train.index[-1] + pd.Timedelta(days=horizon)}")
+
+    # Get target column name dynamically
     target_col = f'{pred}_target_{horizon}d'
-    prepare_minizinc_data(df_train, target_col)
+
+    # Prepare MiniZinc data
+    prepare_minizinc_data(df_train, df_predict, target_col)
+
+    print("Data prepared successfully!")
+    print(f"Training data shape: {df_train.shape}")
+    print(f"Prediction data shape: {df_predict.shape}")
+
+    return df_train, df_predict
 
 
+def main():
+    parser = argparse.ArgumentParser(description="Prepare data for forecasting")
+    parser.add_argument("--data", type=str, required=True, help="Path to CSV file")
+    parser.add_argument("--horizon", type=int, default=1, help="Days ahead to predict")
+    parser.add_argument("--pred", type=str, required=True,
+                        help="Column to predict (e.g., 'High', 'Low', 'Close')")
+
+    args = parser.parse_args()
+
+    # Preprocess data
+    df_train, df_predict = preprocess(args.data, args.horizon, args.pred)
+
+    print("\nSample of training data:")
+    print(df_train.tail(3))
+    print("\nFeatures for prediction:")
+    print(df_predict)
 
 
-
-# def main():
-#     parser = argparse.ArgumentParser(description="Forecast Bitcoin high price in N days")
-#     parser.add_argument("--data", type=str, required=True, help="Path to CSV file")
-#     parser.add_argument("--horizon", type=int, default=7, help="Days ahead to predict")
-#     parser.add_argument("--pred" , type =str, required=True, help="High for highest price during the next week and Low for lowest price for next week")
-#     args = parser.parse_args()
-#
-#     # Load and process
-#     df = load_data(args.data)
-#     df_feat = engineer_features(df)
-#     df_train = engineer_target(df_feat, args.horizon, args.pred)
-#
-#     # Get target column name dynamically
-#     target_col = f'{args.pred}_target_{args.horizon}d'
-#
-#     # Prepare MiniZinc processed_data
-#     prepare_minizinc_data(df_train, target_col)
-#
-# if __name__ == '__main__':
-#     main()
-
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,43 @@
+------------------------------------- Vars -------------------------------------
+X1 : meghdar position gold
+X2 : meghdar position BRC
+X3 : meghdar position ETH
+X4 : meghdar Bonds
+X5 : meghdat hich kari nakardan
+L1 : levrage BTC
+L2 : levrage ETH
+
+
+------------------------------------- Constants -------------------------------------
+gold_profit : profit percentage in gold
+BTC_profit : profit percentage in BTC
+ETH_profit : profit percentage in ETH
+Capital : total amount of money for this week
+
+------------------------------------- Objective function -------------------------------------
+Max(
+    X1*(1+gold_profit) +
+    X2*L1*(1+BTC_profit)+
+    X3*L2*(1+ETH_profit)+
+    X4*(1 + 0.0055/4)
+);
+
+------------------------------------- constraints -------------------------------------
+
+X1 + X2 + X3 + X4 + X5 = Capital
+X4 <= Capital / 10
+
+# preventing BTC position from callmargining
+if X21>0:
+    Sell_BTC*L1 < 1
+else if X22 > 0:
+    Buy_BTC*L1 < 1
+
+# preventing ETH position from callmargining
+if X31>0:
+    Sell_BTC*L1 < 1
+else if X32 > 0:
+    Buy_BTC*L1 < 1
+
+# implementing risk 
+X11 * 0.1 <= Capital/5
