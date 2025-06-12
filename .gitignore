@@ -33,3 +33,6 @@ warnings.log
 #*.csv
 *.dzn
 *.pkl
+*.idea
+_pycache_
+*.pyc
