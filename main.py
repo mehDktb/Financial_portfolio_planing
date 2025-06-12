@@ -117,9 +117,9 @@ print(f"minimum of bitcoin: {predictions['min_btc']}")
 print(f"minimum of ethereum: {predictions['min_eth']}")
 
 print("----------------------------- risk/rewards -----------------------------")
-print(f"we should {"sell" if buy_or_sell[0] else "buy"} GOLD with rr equal to {risk_rewards[0]}")
-print(f"we should {"sell" if buy_or_sell[1] else "buy"} BTC  with rr equal to {risk_rewards[1]}")
-print(f"we should {"sell" if buy_or_sell[2] else "buy"} ETH with rr equal to {risk_rewards[2]}")
+# print(f"we should {"sell" if buy_or_sell[0] else "buy"} GOLD with rr equal to {risk_rewards[0]}")
+# print(f"we should {"sell" if buy_or_sell[1] else "buy"} BTC  with rr equal to {risk_rewards[1]}")
+# print(f"we should {"sell" if buy_or_sell[2] else "buy"} ETH with rr equal to {risk_rewards[2]}")
 
 
 

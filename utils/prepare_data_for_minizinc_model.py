@@ -45,7 +45,6 @@ def prepare_and_save_minizinc_data(
         'ACC_ETH': acc_eth,
         'ACC_BOND': acc_bond,
         'ACC_NONE': acc_none,
-        'ML_GOLD': ml_gold,
         'ML_BTC': ml_btc,
         'ML_ETH': ml_eth,
         'SOP_RW_ACC': sop_rw_acc,

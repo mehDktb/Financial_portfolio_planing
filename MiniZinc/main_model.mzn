@@ -15,7 +15,6 @@ float: ACC_ETH;
 float: ACC_BOND;
 float: ACC_NONE;
 
-float: ML_GOLD;
 float: ML_BTC;
 float: ML_ETH;
 
