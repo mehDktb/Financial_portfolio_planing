@@ -14,7 +14,6 @@ def prepare_and_save_minizinc_data(
         acc_none,
         ml_btc,
         ml_eth,
-        ml_gold=0.0,
         capital=10000.0,
 ):
     """
