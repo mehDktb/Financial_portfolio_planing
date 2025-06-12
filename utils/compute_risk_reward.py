@@ -14,6 +14,8 @@ def compute_risk_reward(predictions):
     """
     buy_sell = [None, None, None]  # 0 = buy, 1 = sell
     risk_rewards = [0.0, 0.0, 0.0]
+    profits = {}
+    losses = {}
 
     gold_today, btc_today, eth_today = todays_price()
 
@@ -27,6 +29,7 @@ def compute_risk_reward(predictions):
     eth_buy_profit = (predictions["max_eth"] - eth_today) / eth_today
     eth_sell_profit = (eth_today - predictions["min_eth"]) / eth_today
 
+
     # Helper function to safely calculate ratio
     def safe_ratio(numerator, denominator):
         if denominator == 0:
@@ -37,24 +40,33 @@ def compute_risk_reward(predictions):
     if gold_buy_profit >= gold_sell_profit:
         buy_sell[0] = 0  # buy
         risk_rewards[0] = min(abs(safe_ratio(gold_buy_profit, gold_sell_profit)), 10)
+        profits["gold"] = gold_buy_profit
     else:
         buy_sell[0] = 1  # sell
         risk_rewards[0] = min(abs(safe_ratio(gold_sell_profit, gold_buy_profit)), 10)
+        profits["gold"] = gold_sell_profit
 
     # BTC
     if btc_buy_profit >= btc_sell_profit:
         buy_sell[1] = 0
         risk_rewards[1] = min(abs(safe_ratio(btc_buy_profit, btc_sell_profit)), 10)
+        profits["btc"] = btc_buy_profit
+        losses["btc"] = btc_sell_profit
     else:
         buy_sell[1] = 1
         risk_rewards[1] = min(abs(safe_ratio(btc_sell_profit, btc_buy_profit)), 10)
+        profits["btc"] = btc_sell_profit
+        losses["btc"] = btc_buy_profit
 
     # ETH
     if eth_buy_profit >= eth_sell_profit:
         buy_sell[2] = 0
         risk_rewards[2] = min(abs(safe_ratio(eth_buy_profit, eth_sell_profit)), 10)
+        profits["eth"] = eth_buy_profit
+        losses["eth"] = eth_sell_profit
     else:
         buy_sell[2] = 1
         risk_rewards[2] = min(abs(safe_ratio(eth_sell_profit, eth_buy_profit)), 10)
-
-    return buy_sell, risk_rewards
+        profits["eth"] = eth_sell_profit
+        losses["eth"] = eth_buy_profit
+    return buy_sell, risk_rewards, profits, losses

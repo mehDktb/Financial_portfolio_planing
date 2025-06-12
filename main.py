@@ -1,15 +1,16 @@
 import joblib
 
-from utils.compute_regression import compute_regression
+from utils.run_minizinc import compute_regression, run_portfolio_optimization
 from preparing_Dataset.preprocessing import preprocess
 from utils.compute_risk_reward import compute_risk_reward
+from utils.prepare_data_for_minizinc_model import prepare_and_save_minizinc_data
 
 # Your filenames
 csv_data = "./raw_data"
-mzn_file = "./MiniZinc/linear_regression.mzn"
-dzn_file = "./processed_data/processed_data.dzn"
+mzn_file = "./MiniZinc/"
+dzn_file = "./processed_data/"
 
-
+capital=100000.0
 datasets = ["Gold.csv", "Bitcoin.csv", "Ethereum.csv"]
 
 gold_high =[]
@@ -35,7 +36,7 @@ for market in datasets:
                 preprocess(data_path=csv_data+'/'+market, horizon=horizon, pred=pred)
                 scaler = joblib.load("./scalers/target_scaler.pkl")
 
-                match = compute_regression(solver_name, mzn_file, dzn_file)
+                match = compute_regression(solver_name, mzn_file+"linear_regression.mzn", dzn_file+"processed_data.dzn")
                 if match:
                     scaled_pred = float(match.group(1))
                     print(f"Scaled prediction: {scaled_pred}")
@@ -74,7 +75,9 @@ predictions["min_btc"] = min(bitcoin_low)
 predictions["min_eth"] = min(ethereum_low)
 
 
-buy_or_sell, risk_rewards = compute_risk_reward(predictions)
+buy_or_sell, risk_rewards, profits, losses= compute_risk_reward(predictions)
+
+
 
 # todo implementing minizinc code
 
@@ -120,4 +123,15 @@ print(f"we should {"sell" if buy_or_sell[2] else "buy"} ETH with rr equal to {ri
 
 
 
+print("----------------------------- Minizinc -----------------------------")
+
+prepare_and_save_minizinc_data(gold_profit=profits["gold"], btc_profit=profits["btc"], eth_profit=profits["eth"], rw_gold=risk_rewards[0], rw_btc=risk_rewards[1],
+    rw_eth=risk_rewards[2], rw_bond=1, rw_none=1, acc_gold=accuracy[0], acc_btc=accuracy[1],
+    acc_eth=accuracy[2], acc_bond=1, acc_none=1, ml_btc=losses["btc"], ml_eth=losses["eth"], capital=capital)
+
+solution = run_portfolio_optimization(solver_name="Gecode", dzn_file=dzn_file+"portfolio_optimization.dzn", mzn_file=mzn_file+"main_model.mzn")
+if solution:
+    print("Optimized Allocation:", solution)
+else:
+    print("Optimization failed.")
 
