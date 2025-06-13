@@ -7,7 +7,7 @@ def prepare_data_for_this_week(today):
     markets = ["Gold", "Bitcoin", "Ethereum"]
     for market in markets:
         save_path = f"./raw_data/{market}.csv"
-        start_date = today - timedelta(days=29)
+        start_date = today - timedelta(days=99)
         raw_data = pd.read_csv(f"./raw_data/{market}_raw.csv")
         raw_data['Price'] = pd.to_datetime(raw_data['Price'])
         mask = (raw_data['Price'] >= start_date) & (raw_data['Price'] <= today)

@@ -16,7 +16,7 @@ today_str = "2024-01-01"
 today = datetime.strptime(today_str, "%Y-%m-%d")
 end_date = datetime.strptime("2025-02-24", "%Y-%m-%d")
 
-capital=100000.0
+capital=50000.0
 datasets = ["Gold.csv", "Bitcoin.csv", "Ethereum.csv"]
 
 gold_high =[]
@@ -94,9 +94,7 @@ while today <= end_date:
 
     # todo update the capital
 
-    # todo update the dataset
 
-    # todo run this fucking code till End
 
 
 
@@ -132,9 +130,12 @@ while today <= end_date:
 
     print("----------------------------- Minizinc -----------------------------")
 
-    prepare_and_save_minizinc_data(gold_profit=profits["gold"], btc_profit=profits["btc"], eth_profit=profits["eth"], rw_gold=risk_rewards[0], rw_btc=risk_rewards[1],
+    minizinc_data = prepare_and_save_minizinc_data(gold_profit=profits["gold"], btc_profit=profits["btc"], eth_profit=profits["eth"], rw_gold=risk_rewards[0], rw_btc=risk_rewards[1],
         rw_eth=risk_rewards[2], rw_bond=1, rw_none=1, acc_gold=accuracy[0], acc_btc=accuracy[1],
         acc_eth=accuracy[2], acc_bond=1, acc_none=1, ml_btc=losses["btc"], ml_eth=losses["eth"], capital=capital)
+
+    print("----------------------------- Minizinc Data -----------------------------")
+    print(minizinc_data)
 
     solution = run_portfolio_optimization(solver_name="Gecode", dzn_file=dzn_file+"portfolio_optimization.dzn", mzn_file=mzn_file+"main_model.mzn")
     if solution:
