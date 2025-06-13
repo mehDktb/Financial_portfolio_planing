@@ -6,6 +6,8 @@ from utils.compute_risk_reward import compute_risk_reward
 from utils.prepare_data_for_minizinc_model import prepare_and_save_minizinc_data
 from datetime import datetime, timedelta
 from preparing_Dataset.prepare_data_for_this_week import prepare_data_for_this_week
+from utils.update_capital import update_capital
+
 # Your filenames
 csv_data = "./raw_data"
 mzn_file = "./MiniZinc/"
@@ -16,7 +18,7 @@ today_str = "2024-01-01"
 today = datetime.strptime(today_str, "%Y-%m-%d")
 end_date = datetime.strptime("2025-02-24", "%Y-%m-%d")
 
-capital=50000.0
+capital=100000.0
 datasets = ["Gold.csv", "Bitcoin.csv", "Ethereum.csv"]
 
 gold_high =[]
@@ -38,7 +40,6 @@ solver_name = "coin-bc"
 while today <= end_date:
     print(f"\033[31m 000000000000000000000000000000000000000 prediction for {today} 000000000000000000000000000000000000000 \033[0m")
     prepare_data_for_this_week(today)
-    today += timedelta(days=7)
     for market in datasets:
             for horizon in range(1, 8):
                 for pred in ["High", "Low"]:
@@ -96,12 +97,6 @@ while today <= end_date:
 
 
 
-
-
-
-
-
-
     # print(gold_high)
     # print(bitcoin_high)
     # print(ethereum_high)
@@ -112,34 +107,43 @@ while today <= end_date:
 
 
 
-    print("----------------------------- Max -----------------------------")
+    print("\n----------------------------- Max -----------------------------")
     print(f"maximum of gold: {predictions['max_gold']}")
     print(f"maximum of bitcoin: {predictions['max_btc']}")
     print(f"maximum of ethereum: {predictions['max_eth']}")
-    print("----------------------------- Min -----------------------------")
+    print("\n----------------------------- Min -----------------------------")
     print(f"minimum of gold: {predictions['min_gold']}")
     print(f"minimum of bitcoin: {predictions['min_btc']}")
     print(f"minimum of ethereum: {predictions['min_eth']}")
+    print("\n----------------------------- Predictions Dict -----------------------------")
+    print(predictions)
 
-    print("----------------------------- risk/rewards -----------------------------")
+    print("\n----------------------------- risk/rewards -----------------------------")
     print(f"we should {"sell" if buy_or_sell[0] else "buy"} GOLD with rr equal to {risk_rewards[0]}")
     print(f"we should {"sell" if buy_or_sell[1] else "buy"} BTC  with rr equal to {risk_rewards[1]}")
     print(f"we should {"sell" if buy_or_sell[2] else "buy"} ETH with rr equal to {risk_rewards[2]}")
 
 
 
-    print("----------------------------- Minizinc -----------------------------")
 
     minizinc_data = prepare_and_save_minizinc_data(gold_profit=profits["gold"], btc_profit=profits["btc"], eth_profit=profits["eth"], rw_gold=risk_rewards[0], rw_btc=risk_rewards[1],
         rw_eth=risk_rewards[2], rw_bond=1, rw_none=1, acc_gold=accuracy[0], acc_btc=accuracy[1],
         acc_eth=accuracy[2], acc_bond=1, acc_none=1, ml_btc=losses["btc"], ml_eth=losses["eth"], capital=capital)
 
-    print("----------------------------- Minizinc Data -----------------------------")
+    print("\n----------------------------- Minizinc Data -----------------------------")
     print(minizinc_data)
+    print("\n----------------------------- Minizinc Solution -----------------------------")
+
 
     solution = run_portfolio_optimization(solver_name="Gecode", dzn_file=dzn_file+"portfolio_optimization.dzn", mzn_file=mzn_file+"main_model.mzn")
     if solution:
         print("Optimized Allocation:", solution)
     else:
         print("Optimization failed.")
+
+
+    results, capital, accuracy, total_number_of_positions= update_capital(today, capital, solution, predictions, buy_or_sell, profits, losses, accuracy, total_number_of_positions)
+
+    print(f"\033[31m laaaasiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa -----------------> {capital}  \033[0m")
+    today += timedelta(days=7)
 

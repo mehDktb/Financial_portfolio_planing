@@ -36,15 +36,18 @@ def compute_risk_reward(predictions):
             return float('inf')  # Represent very high risk/reward
         return numerator / denominator
 
+
     # GOLD
     if gold_buy_profit >= gold_sell_profit:
         buy_sell[0] = 0  # buy
         risk_rewards[0] = min(abs(safe_ratio(gold_buy_profit, gold_sell_profit)), 10)
         profits["gold"] = gold_buy_profit
+        losses["gold"] = gold_sell_profit
     else:
         buy_sell[0] = 1  # sell
         risk_rewards[0] = min(abs(safe_ratio(gold_sell_profit, gold_buy_profit)), 10)
         profits["gold"] = gold_sell_profit
+        losses["gold"] = gold_buy_profit
 
     # BTC
     if btc_buy_profit >= btc_sell_profit:
