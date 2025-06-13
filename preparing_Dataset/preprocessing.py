@@ -146,20 +146,20 @@ def preprocess(data_path, horizon, pred):
     """
     # Load and process the entire dataset
     df = load_data(data_path)
-    print(f"Loaded data: {len(df)} samples")
-    print(f"Date range: {df.index[0]} to {df.index[-1]}")
+    # print(f"Loaded data: {len(df)} samples")
+    # print(f"Date range: {df.index[0]} to {df.index[-1]}")
 
     # Engineer features (adds lag-1 features)
     df_feat = engineer_features(df)
-    print(f"Features engineered: {len(df_feat)} samples after adding lags")
+    # print(f"Features engineered: {len(df_feat)} samples after adding lags")
 
     # Prepare training and prediction data
     df_train, df_predict = prepare_training_data(df_feat, horizon, pred)
 
-    print(f"Training samples: {len(df_train)}")
-    print(f"Prediction features prepared for forecasting {horizon} days ahead")
-    print(f"Last training date: {df_train.index[-1]}")
-    print(f"Predicting for approximately: {df_train.index[-1] + pd.Timedelta(days=horizon)}")
+    # print(f"Training samples: {len(df_train)}")
+    # print(f"Prediction features prepared for forecasting {horizon} days ahead")
+    # print(f"Last training date: {df_train.index[-1]}")
+    # print(f"Predicting for approximately: {df_train.index[-1] + pd.Timedelta(days=horizon)}")
 
     # Get target column name dynamically
     target_col = f'{pred}_target_{horizon}d'
@@ -167,9 +167,9 @@ def preprocess(data_path, horizon, pred):
     # Prepare MiniZinc data
     prepare_minizinc_data(df_train, df_predict, target_col)
 
-    print("Data prepared successfully!")
-    print(f"Training data shape: {df_train.shape}")
-    print(f"Prediction data shape: {df_predict.shape}")
+    # print("Data prepared successfully!")
+    # print(f"Training data shape: {df_train.shape}")
+    # print(f"Prediction data shape: {df_predict.shape}")
 
     return df_train, df_predict
 
@@ -186,10 +186,10 @@ def main():
     # Preprocess data
     df_train, df_predict = preprocess(args.data, args.horizon, args.pred)
 
-    print("\nSample of training data:")
-    print(df_train.tail(3))
-    print("\nFeatures for prediction:")
-    print(df_predict)
+    # print("\nSample of training data:")
+    # print(df_train.tail(3))
+    # print("\nFeatures for prediction:")
+    # print(df_predict)
 
 
 if __name__ == '__main__':

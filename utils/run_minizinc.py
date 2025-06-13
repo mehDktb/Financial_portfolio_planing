@@ -12,9 +12,9 @@ def compute_regression(solver_name, mzn_file, dzn_file):
         )
 
         # Output result
-        print("MiniZinc Output:")
-        print(result.stdout)
-        print("-" * 50)
+        # print("MiniZinc Output:")
+        # print(result.stdout)
+        # print("-" * 50)
 
         # Extract prediction value - updated regex pattern
         prediction_match = re.search(r"Future prediction: ([\d\.\-e]+)", result.stdout)

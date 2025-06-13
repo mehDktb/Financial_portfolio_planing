@@ -59,6 +59,6 @@ def prepare_and_save_minizinc_data(
         for key, value in minizinc_data.items():
             f.write(f"{key} = {value};\n")
 
-    print(f"Data saved to {filename}")
+    # print(f"Data saved to {filename}")
     return minizinc_data
 
