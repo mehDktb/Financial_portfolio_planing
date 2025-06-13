@@ -27,6 +27,8 @@ def prepare_and_save_minizinc_data(
         Dictionary with all parameters needed for the MiniZinc model.
     """
     # Calculate SOP_RW_ACC (sum of products of risk-rewards and accuracies)
+    ml_btc = max(ml_btc, 0)
+    ml_eth = max(ml_eth, 0)
     sop_rw_acc = (rw_gold * acc_gold) + (rw_btc * acc_btc) + (rw_eth * acc_eth) + (rw_bond * acc_bond) + (
                 rw_none * acc_none)
     filename = "./processed_data/portfolio_optimization.dzn"
