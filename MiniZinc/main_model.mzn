@@ -26,8 +26,11 @@ var 0.0..CAPITAL: x_gold;
 var 0.0..CAPITAL: x_btc;
 var 0.0..CAPITAL: x_eth;
 var 0.0..CAPITAL: x_bond;
+
+% x_nothing is automatically calculated as remaining capital
 var 0.0..CAPITAL: x_nothing;
 
+% Leverage levels
 var 1..3: lev_btc;
 var 1..3: lev_eth;
 
@@ -42,13 +45,19 @@ var float: total_return =
 solve maximize total_return;
 
 % CONSTRAINTS
-constraint x_gold + x_eth + x_btc + x_bond + x_nothing = CAPITAL;
 
-constraint x_gold    <= CAPITAL * RW_GOLD * ACC_GOLD / SOP_RW_ACC;
-constraint x_eth     <= CAPITAL * RW_ETH  * ACC_ETH  / SOP_RW_ACC;
-constraint x_btc     <= CAPITAL * RW_BTC  * ACC_BTC  / SOP_RW_ACC;
-constraint x_bond    <= CAPITAL * RW_BOND * ACC_BOND / SOP_RW_ACC;
-constraint x_nothing <= CAPITAL * RW_NONE * ACC_NONE / SOP_RW_ACC;
+% Remaining capital goes to x_nothing
+constraint x_nothing = CAPITAL - (x_gold + x_btc + x_eth + x_bond);
 
+% Risk × accuracy limits for each asset
+constraint x_gold <= CAPITAL * ((RW_GOLD * ACC_GOLD) / SOP_RW_ACC);
+constraint x_btc  <= CAPITAL * ((RW_BTC  * ACC_BTC)  / SOP_RW_ACC);
+constraint x_eth  <= CAPITAL * ((RW_ETH  * ACC_ETH) / SOP_RW_ACC);
+constraint x_bond <= CAPITAL * ((RW_BOND * ACC_BOND) / SOP_RW_ACC);
+
+% Optional: allow full allocation to x_nothing if needed
+constraint x_nothing <= min(CAPITAL * RW_NONE * ACC_NONE / SOP_RW_ACC, CAPITAL);
+
+% Leverage risk constraint
 constraint lev_btc * ML_BTC <= 0.9;
 constraint lev_eth * ML_ETH <= 0.9;

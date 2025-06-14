@@ -1,7 +1,7 @@
 import pandas as pd
 from datetime import datetime, timedelta
 
-def update_capital(today, capital, solution, predictions, buy_or_sell, profits, losses, accuracy, total_number_of_positions):
+def update_capital(today, capital, solution, predictions, buy_or_sell, profits, losses, accuracy, total_number_of_positions, good_predictions):
     # Convert the input string to a datetime object
     end_date = today + timedelta(days=7)
 
@@ -41,7 +41,7 @@ def update_capital(today, capital, solution, predictions, buy_or_sell, profits, 
         if buy_or_sell[0]:
             if results["Gold"]["min_low"] <= predictions["min_gold"]:
                 capital += solution['x_gold'] * (profits['gold'])
-                accuracy[0] += 1
+                good_predictions[0] += 1
                 print(f"\033[31m you earned {solution['x_gold'] * (profits['gold'])} in gold \033[0m")
 
             elif results["Gold"]["max_high"] >= predictions["max_gold"]:
@@ -50,14 +50,14 @@ def update_capital(today, capital, solution, predictions, buy_or_sell, profits, 
 
             else:
                 capital += solution['x_gold'] * (profits['gold']*0.3)
-                accuracy[0] += 1
+                good_predictions[0] += 1
                 print(f"\033[31m you earned {solution['x_gold'] * (profits['gold']*0.3)} in gold \033[0m")
 
 
         else:
             if results["Gold"]["max_high"] >= predictions["max_gold"]:
                 capital += solution['x_gold'] * (profits['gold'])
-                accuracy[0] += 1
+                good_predictions[0] += 1
                 print(f"\033[31m you earned {solution['x_gold'] * (profits['gold'])} in gold \033[0m")
 
             elif results["Gold"]["min_low"] <= predictions["min_gold"]:
@@ -65,13 +65,13 @@ def update_capital(today, capital, solution, predictions, buy_or_sell, profits, 
                 print(f"\033[31m you lost {solution['x_gold'] * (-losses['gold'])} in gold \033[0m")
             else:
                 capital += solution['x_gold'] * (profits['gold']*0.3)
-                accuracy[0] += 1
+                good_predictions[0] += 1
                 print(f"\033[31m you earned {solution['x_gold'] * (profits['gold'] * 0.3)} in gold \033[0m")
 
         if buy_or_sell[1]:
             if results["Bitcoin"]["min_low"] <= predictions["min_btc"]:
                 capital += solution["lev_btc"] * solution['x_btc'] * (profits['btc'])
-                accuracy[1] += 1
+                good_predictions[1] += 1
                 print(f"\033[31m you earned {solution['x_btc'] * (profits['btc'])} in btc \033[0m")
 
             elif results["Bitcoin"]["max_high"] >= predictions["max_btc"]:
@@ -80,13 +80,13 @@ def update_capital(today, capital, solution, predictions, buy_or_sell, profits, 
 
             else:
                 capital += solution['x_btc'] * (profits['btc']*0.3)
-                accuracy[1] += 1
+                good_predictions[1] += 1
                 print(f"\033[31m you earned {solution['x_btc'] * (profits['btc']*0.3)} in btc \033[0m")
 
         else:
             if results["Bitcoin"]["max_high"] >= predictions["max_btc"]:
                 capital += solution["lev_btc"] * solution['x_btc'] * (profits['btc'])
-                accuracy[1] += 1
+                good_predictions[1] += 1
                 print(f"\033[31m you earned {solution['x_btc'] * (profits['btc'])} in btc \033[0m")
 
             elif results["Bitcoin"]["min_low"] <= predictions["min_btc"]:
@@ -95,14 +95,14 @@ def update_capital(today, capital, solution, predictions, buy_or_sell, profits, 
 
             else:
                 capital += solution['x_btc'] * (profits['btc']*0.3)
-                accuracy[1] += 1
+                good_predictions[1] += 1
                 print(f"\033[31m you earned {solution['x_btc'] * (profits['btc']*0.3)} in btc \033[0m")
 
 
         if buy_or_sell[2]:
             if results["Ethereum"]["min_low"] <= predictions["min_eth"]:
                 capital += solution["lev_eth"] * solution['x_eth'] * (+profits['eth'])
-                accuracy[2] += 1
+                good_predictions[2] += 1
                 print(f"\033[31m you earned {solution['x_eth'] * (+profits['eth'])} in eth \033[0m")
 
             elif results["Ethereum"]["max_high"] >= predictions["max_eth"]:
@@ -111,13 +111,13 @@ def update_capital(today, capital, solution, predictions, buy_or_sell, profits, 
 
             else:
                 capital += solution['x_eth'] * (profits['eth']*0.3)
-                accuracy[2] += 1
+                good_predictions[2] += 1
                 print(f"\033[31m you earned {solution['x_eth'] * (profits['eth']*0.3)} in eth \033[0m")
 
         else:
             if results["Ethereum"]["max_high"] >= predictions["max_eth"]:
                 capital += solution["lev_eth"] * solution['x_eth'] * (profits['eth'])
-                accuracy[2] += 1
+                good_predictions[2] += 1
                 print(f"\033[31m you earned {solution['x_eth'] * (+profits['eth'])} in eth \033[0m")
 
             elif results["Ethereum"]["min_low"] <= predictions["min_eth"]:
@@ -126,24 +126,25 @@ def update_capital(today, capital, solution, predictions, buy_or_sell, profits, 
 
             else:
                 capital += solution['x_eth'] * (profits['eth']*0.3)
-                accuracy[2] += 1
+                good_predictions[2] += 1
                 print(f"\033[31m you earned {solution['x_eth'] * (profits['eth']*0.3)} in eth \033[0m")
 
 
         if solution["x_bond"]:
             capital += solution["x_bond"] * (0.0055/4)
+
+        total_number_of_positions[0] += 1
+        total_number_of_positions[1] += 1
+        total_number_of_positions[2] += 1
     else:
         print("KIR TO IN ZENDEGI TRADE NEMIKONAM !")
 
-    total_number_of_positions[0] += 1
-    total_number_of_positions[1] += 1
-    total_number_of_positions[2] += 1
 
-    accuracy[0] = accuracy[0]/total_number_of_positions[0]
-    accuracy[1] = accuracy[1]/total_number_of_positions[1]
-    accuracy[2] = accuracy[2]/total_number_of_positions[2]
+    accuracy[0] = good_predictions[0]/total_number_of_positions[0]
+    accuracy[1] = good_predictions[1]/total_number_of_positions[1]
+    accuracy[2] = good_predictions[2]/total_number_of_positions[2]
 
-    return results, capital, accuracy, total_number_of_positions
+    return results, capital, accuracy, total_number_of_positions, good_predictions
 
 
 # Example usage:

@@ -32,6 +32,7 @@ ethereum_low =[]
 predictions = {}
 # always GOLD, BTC, ETH
 total_number_of_positions = [1,1,1]
+good_predictions = [1,1,1]
 accuracy = [1,1,1]
 
 # Specify your solver, e.g., "gecode", "cbc", "coin-bc", "chuffed"
@@ -142,7 +143,7 @@ while today <= end_date:
         print("Optimization failed.")
 
 
-    results, capital, accuracy, total_number_of_positions= update_capital(today, capital, solution, predictions, buy_or_sell, profits, losses, accuracy, total_number_of_positions)
+    results, capital, accuracy, total_number_of_positions, good_predictions= update_capital(today, capital, solution, predictions, buy_or_sell, profits, losses, accuracy, total_number_of_positions, good_predictions)
 
     print(f"\033[31m laaaasiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa -----------------> {capital}  \033[0m")
     today += timedelta(days=7)
