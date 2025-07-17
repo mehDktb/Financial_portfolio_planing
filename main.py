@@ -18,7 +18,7 @@ today_str = "2024-01-01"
 today = datetime.strptime(today_str, "%Y-%m-%d")
 end_date = datetime.strptime("2025-02-24", "%Y-%m-%d")
 
-capital=100000.0
+capital=50000.0
 datasets = ["Gold.csv", "Bitcoin.csv", "Ethereum.csv"]
 
 gold_high =[]
@@ -49,6 +49,7 @@ while today <= end_date:
                     scaler = joblib.load("./scalers/target_scaler.pkl")
 
                     match = compute_regression(solver_name, mzn_file+"linear_regression.mzn", dzn_file+"processed_data.dzn")
+
                     if match:
                         scaled_pred = float(match.group(1))
                         print(f"Scaled prediction: {scaled_pred}")
@@ -75,7 +76,7 @@ while today <= end_date:
                         else :
                             raise ValueError (f"unsuported input {market} {horizon} {pred}")
                     else:
-                        print("Could not find prediction in MiniZinc output.")
+                        print("Could not find prediction in MiniZinc linear regression output.")
 
                     print(f"000000000000000000000000000000000000000 processing {market} ///// {horizon} ///// {pred} 000000000000000000000000000000000000000")
 
@@ -93,18 +94,6 @@ while today <= end_date:
     buy_or_sell, risk_rewards, profits, losses= compute_risk_reward(predictions)
 
 
-
-    # todo update the capital
-
-
-
-    # print(gold_high)
-    # print(bitcoin_high)
-    # print(ethereum_high)
-    #
-    # print(gold_low)
-    # print(bitcoin_low)
-    # print(ethereum_low)
 
 
 
@@ -143,7 +132,7 @@ while today <= end_date:
         print("Optimization failed.")
 
 
-    results, capital, accuracy, total_number_of_positions, good_predictions= update_capital(today, capital, solution, predictions, buy_or_sell, profits, losses, accuracy, total_number_of_positions, good_predictions)
+    results, capital, accuracy, total_number_of_positions, good_predictions = update_capital(today, capital, solution, predictions, buy_or_sell, profits, losses, accuracy, total_number_of_positions, good_predictions)
 
     print(f"\033[31m laaaasiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa -----------------> {capital}  \033[0m")
     today += timedelta(days=7)

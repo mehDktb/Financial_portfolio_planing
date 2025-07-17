@@ -137,7 +137,7 @@ def update_capital(today, capital, solution, predictions, buy_or_sell, profits, 
         total_number_of_positions[1] += 1
         total_number_of_positions[2] += 1
     else:
-        print("KIR TO IN ZENDEGI TRADE NEMIKONAM !")
+        print("TRADE NEMIKONAM !")
 
 
     accuracy[0] = good_predictions[0]/total_number_of_positions[0]
