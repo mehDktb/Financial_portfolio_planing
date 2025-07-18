@@ -134,6 +134,6 @@ while today <= end_date:
 
     results, capital, accuracy, total_number_of_positions, good_predictions = update_capital(today, capital, solution, predictions, buy_or_sell, profits, losses, accuracy, total_number_of_positions, good_predictions)
 
-    print(f"\033[31m laaaasiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa -----------------> {capital}  \033[0m")
+    print(f"\033[31m capitallllllllllllllllllllllllllll -----------------> {capital}  \033[0m")
     today += timedelta(days=7)
 
